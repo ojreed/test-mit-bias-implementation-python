@@ -2,10 +2,6 @@
 run code with $py -3.8 MITBiasMLImplementation.py
 
 
-TODO
-	print data to txt
-	fix second model issue
-
 """
 
 
@@ -179,6 +175,6 @@ class DataProcessor(object):
 				print("ANN Training Skipped \n")
 				return None
 
-DataProcessor("./phrasebias_data/phrase_counts",2)
+DataProcessor("./phrasebias_data/phrase_counts",2,[1])
 		
 		
