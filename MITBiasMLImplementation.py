@@ -37,6 +37,7 @@ class DataProcessor(object):
 			2 - skips to process 
 			3 - skips to trained models (WIP)
 		"""
+		#data setup
 		self.mode = mode 
 		self.targetDS = targetDS
 		self.folder = folder
@@ -45,15 +46,23 @@ class DataProcessor(object):
 		if self.targetDS == None:
 			self.targetDS = [x for x in range(len(self.dataArray))]
 		self.dummyModelList = self.buildNetworks(self.dataArray,self.mode,self.targetDS)
+		#train models
 		self.trainedModelList = self.trainNetworks(self.dummyModelList,self.dataArray,self.targetDS,self.mode)
+		#run models
 		self.main()
 
 	def main(self):
 		dsPointer=0
 		for x in range(len(self.dataArray)):
 			if x in self.targetDS:
-				print(self.trainedModelList[dsPointer].predict(np.array(self.dataArray[x][0]).reshape(len(self.dataArray[x][0]),1,1)))
+				data_holder = self.trainedModelList[dsPointer].predict(np.array(self.dataArray[x][0]).reshape(len(self.dataArray[x][0]),1,1))
 				dsPointer+=1
+		with open('Data_Print_Out.txt', 'w') as f:
+			for idx in range(len(data_holder)):
+				f.write("Phrase: " + str(idx) +"\n"+ str(data_holder[idx])+"\n")
+		f.close()
+
+
 	def setup(self,folder,mode): #opens and sets up csvs
 		if mode == 0:
 			csvLst = os.scandir(folder) #opens data folder
