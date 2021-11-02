@@ -63,6 +63,7 @@ class DataProcessor(object):
 
 	def setup(self,folder,mode): #opens and sets up csvs
 		if mode == 0:
+			print("Import CSV Computing \n")
 			csvLst = os.scandir(folder) #opens data folder
 			data = [pd.read_csv(review) for review in csvLst] #reads the csvs into an array as dataframes
 			pickle.dump(data, open( "csvArray.p", "wb" ) )
@@ -76,6 +77,7 @@ class DataProcessor(object):
 
 	def process(self,dataArrayRaw,mode):#converts csvs to python list for easier ann training
 		if mode < 2: #if we need to make a new data array to use for training 
+			print("CSV Processing Computing\n")
 			dataArray = []
 			# print(dataArray)
 			for x in range(len(dataArrayRaw)): #loop through each of our datasets
@@ -180,7 +182,7 @@ class DataProcessor(object):
 	"""
 	def LnLpoi(self,inp):
 		W,U,V = self.parse_inputs(inp)
-		print(U)
+		# print(U)
 		N = self.N
 		r = self.r #initialize r to 3 because of MIT article
 		n = (self.N.shape)[1] #n = cols --> corrisponds with i/media source
@@ -204,22 +206,28 @@ class DataProcessor(object):
 					# print(V[j])
 					# print(W)
 					# exit()
+					# print("hit")
 					LnLpoi_val += N_bar[j][i]
 				else:	
 					LnLpoi_val += (N_bar[j][i] + N[j][i]*np.log(N[j][i]/(np.e*N_bar[j][i])))
 				# print(np.log(N[j][i]/(np.e*N_bar[j][i])))
 				# print(LnLpoi_val)
-		# print(N_bar[10][5],N[10][5])
+				# print(N_bar[j][i])
 		# print(LnLpoi_val)
+		# exit()
+		# print(N_bar[10][5],N[10][5])
 		# print(W)
-		print(N_bar,N)
-		print("\n")
+		# print(N_bar,N)
+		# print("\n")
+		# print(LnLpoi_val)
+		# print("\n")
 		return LnLpoi_val 
 
 	def optimize_handeler(self,mode):
 		if mode <3:
+			print("SVD Processing Computing \n")
 			# outputs = [[] for x in range(len(self.dataArray))]
-			outputs = pickle.load( open( "SVD_Outputs.p", "rb" ) )
+			outputs = pickle.load( open( "SVD_Outputs_diff_ev.p", "rb" ) )
 			for DS in self.targetDS:
 				self.N = self.dataArray[DS][0]
 				# print(self.N.shape)
@@ -232,26 +240,32 @@ class DataProcessor(object):
 					# inp[index] = random.randint(500)
 					# inp[index] = 50
 				#,jac=self.rosen_der, hess=self.rosen_hess
-				out = scipy.optimize.minimize(self.LnLpoi,inp,method='Nelder-Mead',options={'xatol':1, 'maxiter':1000*len(inp),'disp': True})
-				print(out)
+				# out = scipy.optimize.minimize(self.LnLpoi,inp,method='Nelder-Mead',options={'xatol':1, 'maxiter':1000*len(inp),'disp': True})
+				out = scipy.optimize.differential_evolution(self.LnLpoi,[[0,np.cbrt(np.amax(self.N))] for x in range(len(inp))],disp = True, polish = True, updating = 'immediate')
+				# print(out)
 				W,U,V = self.parse_inputs(out.x)
 				print("U Matrix of "+ str(DS) + ":\n")
 				print(U)
 				print("\nV Matrix of " + str(DS) + ":\n")
 				print(V)
 				outputs[DS] = [W,U,V]
-			pickle.dump(outputs, open( "SVD_Outputs.p", "wb" ) )
+			pickle.dump(outputs, open( "SVD_Outputs_diff_ev.p", "wb" ) )
 			return outputs
 		if mode == 3:
 			print("SVD Processing Loaded \n")
-			return pickle.load( open( "SVD_Outputs.p", "rb" ) )
+			# self.N = self.dataArray[20][0]
+			return pickle.load( open( "SVD_Outputs_diff_ev.p", "rb" ) )
 		if mode > 3: 
 			print("SVD Processing Skipped \n")
+			# self.N = self.dataArray[20][0]
 			return None
 	def display_datasets(self):
 		for DS in self.targetDS:
 			U = self.outputs[DS][1]
 			V = self.outputs[DS][2]
+			W = self.outputs[DS][0]
+			# print(self.idx_n_bar_calc(3, 0, 0, W, U, V))	
+			# print(self.N[0,0])		
 			#plot news sources
 			y = U[:,1]
 			x = U[:,2]
@@ -272,6 +286,7 @@ class DataProcessor(object):
 				ax.annotate(txt, (x[i], y[i]))
 			plt.title("Topic" + str(DS))
 			plt.show()
+	
 
 
 
@@ -279,6 +294,7 @@ class DataProcessor(object):
 
 
 
-DataProcessor("./phrasebias_data/phrase_counts",2,[20])
+
+DataProcessor("./phrasebias_data/phrase_counts",3,[0])
 		
 		
